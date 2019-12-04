@@ -1,8 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { request, deepClone,util } from 'utils';
+import { request, deepClone, util } from 'utils';
 import AutoField from './AutoField';
-import {Form,message,Button,Tabs,Row,Col} from 'antd';
+import BirdButton from './BirdButton';
+import { Form, message, Tabs, Row, Col, Divider } from 'antd';
 
 const FormItem = Form.Item;
 const TabPane = Tabs.TabPane;
@@ -25,12 +26,11 @@ class BirdForm extends React.Component {
       group: [],
 
       initValue: initValue,
-      submitting: false,
       isValueChange: false
     }
   }
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.value != this.props.value) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
+    if (!util.object.equal(nextProps.value,this.props.value)) {
       let initValue = deepClone(nextProps.value)
       this.setState({
         initValue: initValue
@@ -43,13 +43,13 @@ class BirdForm extends React.Component {
   }
 
   initGroup() {
-    if (!this.props.withTab || this.props.fields.length == 0 || this.state.group.length > 0) return;
+    if (!this.props.withTab || this.props.fields.length === 0 || this.state.group.length > 0) return;
 
     let group = [];
     for (let field of this.props.fields) {
       let groupName = field.groupName || this.props.defaultGroupName;
 
-      let index = group.findIndex(g => g.groupName == groupName);
+      let index = group.findIndex(g => g.groupName === groupName);
       if (index < 0) {
         group.push({
           groupName: groupName,
@@ -71,6 +71,15 @@ class BirdForm extends React.Component {
     this.setState({
       initValue: initValue,
       isValueChange: true
+    }, () => {
+      if (this.props.onChange) {
+        let result = this.props.onChange(this.state.initValue);
+        if (result) this.setState({ initValue: result });
+      }
+
+      if (this.props.onFieldChange) {
+        this.props.onFieldChange(key, value);
+      }
     });
   }
 
@@ -86,7 +95,7 @@ class BirdForm extends React.Component {
     let dto = this.getResult();
     //验证数据合法性
     for (let field of this.props.fields) {
-      if (field.isRequired && util.string.isEmpty(dto[field.key])) {
+      if ((field.isRequired || field.required) && util.string.isEmpty(dto[field.key])) {
         message.error('`' + field.name + '`不能为空.');
         return false;
       }
@@ -103,20 +112,16 @@ class BirdForm extends React.Component {
 
   save() {
     let self = this;
-    if(!self.validate())return;
+    if (!self.validate()) return;
 
     let dto = self.getResult();
-    self.setState({submitting: true})
-
     request({
       url: this.props.saveUrl,
       method: "post",
       data: dto
-    }).then(function () {
-      self.setState({submitting: false});
+    }).then(function (result) {
       message.success('保存成功');
-    }).catch(function () {
-      self.setState({submitting: false});
+      self.props.afterSave && self.props.afterSave(result);
     });
   }
 
@@ -145,17 +150,15 @@ class BirdForm extends React.Component {
     }
 
     let autoFields = rows.map((row, index) => {
-      return <Row key={formKey+'_row_' + index}>
+      return <Row key={formKey + '_row_' + index}>
         {row.map(field => {
-          let colSpan = field.colSpan||1;
-          if (colSpan > 4) {
-            colSpan = 4;
-          }
+          let colSpan = field.colSpan || 1;
+          if (colSpan > 4) {colSpan = 4;}
           let unit = 24 / self.props.lineCapacity;
-          return <Col span={colSpan * unit} key={formKey+'_field_' + field.key}>
+          return <Col span={colSpan * unit} key={formKey + '_field_' + field.key}>
             {field.fieldType !== 'empty' &&
-            <AutoField fieldOption={field} labelColSpan={6 / colSpan}
-                       onChange={(key, value) => self.onFieldChange(key, value)}/>}
+              <AutoField fieldOption={field} labelColSpan={6 / colSpan}
+                onChange={(key, value) => self.onFieldChange(key, value)} />}
           </Col>
         })}
       </Row>
@@ -168,19 +171,18 @@ class BirdForm extends React.Component {
 
     const submitFormLayout = {
       wrapperCol: {
-        xs: {span: 24, offset: 0},
-        sm: {span: 10, offset: 7},
-      },
+        xs: { span: 20, offset: 2 }
+      }
     };
 
-    const button = <Button type="primary" loading={this.state.submitting} icon='save' onClick={() => self.save()}>
+    const button = <BirdButton type="primary" idempotency = {true} icon='save' onClick={() => self.save()}>
       提交
-    </Button>;
+    </BirdButton>;
 
     return (
       self.props.withTab
         ? <Tabs type={self.props.tabType} tabPosition={self.props.tabPosition}
-                tabBarExtraContent={this.props.saveUrl && button}>
+          tabBarExtraContent={this.props.saveUrl && button}>
           {self.state.group.map((group, index) => {
             return <TabPane tab={group.groupName} key={'group_' + index}>
               <Form>
@@ -191,7 +193,8 @@ class BirdForm extends React.Component {
         </Tabs>
         : <Form>
           {self.getFields(self.props.fields)}
-          {this.props.saveUrl && <FormItem {...submitFormLayout} style={{marginTop: 32}}>
+          {!this.props.disabled && this.props.saveUrl && <FormItem {...submitFormLayout}>
+            <Divider dashed />
             {button}
           </FormItem>}
         </Form>
@@ -200,16 +203,21 @@ class BirdForm extends React.Component {
 }
 
 BirdForm.propTypes = {
-  fields:PropTypes.array.isRequired,
-  lineCapacity:PropTypes.number,//每行容量
-  withTab:PropTypes.bool,//是否使用tab展示
+  fields: PropTypes.array.isRequired,
+  lineCapacity: PropTypes.number,//每行容量
+  withTab: PropTypes.bool,//是否使用tab展示
   defaultGroupName: PropTypes.string,//默认的分组名
   activeGroupName: PropTypes.string,//选中的分组名
   tabType: PropTypes.string,//tab类型
   tabPosition: PropTypes.oneOf(['top', 'right', 'bottom', 'left']),//tab的位置
 
-  saveUrl:PropTypes.string,
-  value:PropTypes.object
+  saveUrl: PropTypes.string,
+  value: PropTypes.object,
+  disabled: PropTypes.bool,
+
+  onChange: PropTypes.func,
+  onFieldChange: PropTypes.func,
+  afterSave: PropTypes.func
 };
 
 BirdForm.defaultProps = {
@@ -220,7 +228,8 @@ BirdForm.defaultProps = {
   tabPosition: 'top',
 
   saveUrl: '',
-  value: {}
+  value: {},
+  disabled: false
 };
 
 export default BirdForm;

@@ -1,4 +1,4 @@
-export default  {
+module.exports = {
   color: {
     green: '#64ea91',
     blue: '#8fc9fb',
@@ -9,6 +9,6 @@ export default  {
     borderBase: '#e5e5e5',
     borderSplit: '#f4f4f4',
     grass: '#d6fbb5',
-    sky: '#c1e0fc',
-  },
+    sky: '#c1e0fc'
+  }
 }

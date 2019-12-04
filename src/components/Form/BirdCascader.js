@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Cascader } from 'antd';
-import { request, util } from 'utils';
+import { request, util,deepClone } from 'utils';
 
 class BirdCascader extends React.Component {
   constructor(props) {
@@ -18,39 +18,38 @@ class BirdCascader extends React.Component {
   }
 
   componentDidMount() {
-    let self = this;
-    if (self.props.data.length > 0) {
-      self.initData(this.props.data);
-    } else {
+    if (this.props.data.length > 0) {
+      this.initData(this.props.data);
+    } else if (this.props.url) {
       request({
-        url: self.props.url,
+        url: this.props.url,
         method: 'GET'
-      }).then(function (data) {
-        self.initData(data);
+      }).then(data => {
+        this.initData(data);
       })
     }
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (!util.object.equal(nextProps.data, this.props.data)) {
       this.initData(nextProps.data)
     }
   }
 
   initData(data) {
-    let self = this;
+    let treeData = deepClone(data);
 
     let folderNodes = [];
     let options = [];
     let hash = {}
-    data.forEach(item => {
+    treeData.forEach(item => {
       hash[item['value']] = item;
-      if (item.folder + '' == 'true') {
+      if (item.folder + '' === 'true') {
         folderNodes.push(item);
       }
     });
 
-    data.forEach((item) => {
+    treeData.forEach((item) => {
       let hashVP = hash[item['parentValue']]
       if (hashVP) {
         !hashVP['children'] && (hashVP['children'] = [])
@@ -64,7 +63,7 @@ class BirdCascader extends React.Component {
     for (let i = 0, len = folderNodes.length; i < len; i++) {
       let curNode = folderNodes[i];
 
-      while (curNode != null && typeof (curNode) != 'undefined') {
+      while (curNode !== null && typeof (curNode) !== 'undefined') {
         let value = curNode['value'];
         if (hash[value]['children'] && hash[value]['children'].length > 0) break;
 
@@ -73,7 +72,7 @@ class BirdCascader extends React.Component {
         let pArr = pNode ? pNode['children'] : options;
 
         let index = pArr.findIndex(item => item['value'] === value);
-        if (index == -1) break;
+        if (index === -1) break;
 
         pArr.splice(index, 1)
         curNode = hash[pValue];
@@ -81,7 +80,7 @@ class BirdCascader extends React.Component {
     }
 
 
-    self.setState({
+    this.setState({
       itemHash: hash,
       options: options
     });
@@ -102,16 +101,18 @@ class BirdCascader extends React.Component {
 
 
   render() {
+    let innerProps = this.props.innerProps || {};
     let fValue = this.formatValue(this.props.value);
 
-    return <Cascader options={this.state.options}
-      value={fValue}
-      expandTrigger={this.props.expandTrigger}
-      size={this.props.size}
-      disabled={this.props.disabled}
-      getPopupContainer={this.props.getPopupContainer}
-      onChange={value => this.onPropsChange(value)}
-      style={{ width: this.props.width || '100%' }} />
+    return <Cascader {...{
+      value: fValue,
+      onChange: value => this.onPropsChange(value),
+      options: this.state.options,
+      disabled: this.props.disabled,
+      placeholder: this.props.placeholder,
+      style: { width: this.props.width || '100%' },
+      ...innerProps
+    }} />
   }
 }
 
@@ -120,19 +121,14 @@ BirdCascader.propTypes = {
   data: PropTypes.array,
   onChange: PropTypes.func,
   disabled: PropTypes.bool,
-  expandTrigger: PropTypes.string,
   placeholder: PropTypes.string,
-  size: PropTypes.string,
   value: PropTypes.string,
-  getPopupContainer: PropTypes.func
+  innerProps: PropTypes.object
 };
 
 BirdCascader.defaultProps = {
   data: [],
-  expandTrigger: 'click',
-  size: 'default',
-  disabled: false,
-  getPopupContainer: () => document.body
+  disabled: false
 }
 
 

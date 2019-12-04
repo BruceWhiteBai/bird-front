@@ -7,14 +7,13 @@ import pathToRegexp from 'path-to-regexp'
 import { message } from 'antd'
 import config from './config'
 import util from './util';
-import permission from './permission';
 
 const fetch = (options) => {
   let {
     method = 'post',
     data,
     fetchType,
-    url,
+    url
   } = options
 
   const cloneData = lodash.cloneDeep(data)
@@ -42,7 +41,7 @@ const fetch = (options) => {
       jsonp(url, {
         param: `${qs.stringify(data)}&callback`,
         name: `jsonp_${new Date().getTime()}`,
-        timeout: 4000,
+        timeout: 4000
       }, (error, result) => {
         if (error) {
           reject(error)
@@ -60,7 +59,7 @@ const fetch = (options) => {
     config => {
       var token = util.auth.getToken();
       if (token) {  // 判断是否存在token，如果存在的话，则每个http header都加上token
-        config.headers['sso.token'] = token;
+        config.headers['Sso-Token'] = token;
       }
       return config;
     }, err => {
@@ -87,9 +86,9 @@ const fetch = (options) => {
   }
 }
 
-export default function request (options) {
+export default function request(options) {
   //TODO:后台访问地址前缀移入配置文件
-  if (options.url && options.url.indexOf('//') == -1 && options.url.indexOf('api/v') < 0) {
+  if (options.url && options.url.indexOf('//') === -1 && options.url.indexOf('api/v') < 0) {
     options.url = config.apiPrefix + options.url;
   }
   if (options.url && options.url.indexOf('//') > -1) {
@@ -108,21 +107,20 @@ export default function request (options) {
 
 
   return fetch(options).then((response) => {
-    const { statusText, status } = response
     let data = options.fetchType === 'YQL' ? response.data.query.results.json : response.data
-    if(data['httpCode']==="200") {
+    if (data['httpCode'] === "200") {
       return Promise.resolve(data['result'])
     } else if (data['code'] + '' === '500') {
-      return Promise.reject({response});
-    }else {
+      return Promise.reject({ response });
+    } else {
       return Promise.resolve(data);
     }
   }).catch((error) => {
-    const {response} = error
+    const { response } = error
     let msg
     let statusCode
     if (response && response instanceof Object) {
-      const {data, statusText} = response
+      const { data, statusText } = response
       statusCode = response.status
       msg = data.message || statusText
     } else {
@@ -130,6 +128,6 @@ export default function request (options) {
       msg = error.message || 'Network Error'
     }
     message.error(msg);
-    return Promise.reject({success: false, statusCode, message: msg})
+    return Promise.reject({ success: false, statusCode, message: msg })
   })
 }

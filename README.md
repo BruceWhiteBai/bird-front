@@ -1,6 +1,6 @@
 # bird-front
 
-bird-front是基于react、ant-design的中后台管理系统模板。细粒度权限控制方案，同时封装了许多常用的数据组件。项目中使用了许多mock数据，所以暂不支持在线预览，可克隆至本地运行查看效果。
+bird-front是基于react、ant-design、dva、umi的中后台管理系统模板。细粒度权限控制方案，同时封装了许多常用的数据组件。项目暂不支持在线预览，可克隆至本地运行查看效果。
 
 ## 权限方案
 
@@ -22,7 +22,6 @@ bird-front对资源权限进行了全新设计，支持细粒度的权限控制�
 bird-front对常用的数据组件进行了封装，使其简单易用，包括：
 
 - 全自动数据表格：[bird-grid](https://github.com/liuxx001/bird-front/blob/master/doc/bird-grid.md)。示例代码：
-
 ```
 render() {
     let gridOption = {
@@ -70,13 +69,13 @@ render() {
     )
   }
 ```
-很少的代码即可完成表格数据增删查改、高级搜索、排序、分页等功能，新增、编辑的弹框根据表格配置自动生成。效果图：![table.png-64.8kB][1]
+很少的代码即可完成表格数据增删查改、高级搜索、排序、分页等功能，新增、编辑的弹框根据表格配置自动生成。效果图：![image.png-93.4kB][1]
 
 
 - 全自动树表：[bird-tree-grid](https://github.com/liuxx001/bird-front/blob/master/doc/bird-tree-grid.md)
 - 数据树：[bird-tree](https://github.com/liuxx001/bird-front/blob/master/doc/bird-tree.md)
 - 全自动表单：[bird-form](https://github.com/liuxx001/bird-front/blob/master/doc/bird-form.md)
-- 权限按钮：[bird-button](https://github.com/liuxx001/bird-front/blob/master/doc/bird-button.md)
+- 权限与幂等按钮：[bird-button](https://github.com/liuxx001/bird-front/blob/master/doc/bird-button.md)
 - 下拉选择器：[bird-selector](https://github.com/liuxx001/bird-front/blob/master/doc/bird-selector.md)
 - 多选组件：[bird-multi](https://github.com/liuxx001/bird-front/blob/master/doc/bird-multi.md)
 - 级联组件：[bird-cascader](https://github.com/liuxx001/bird-front/blob/master/doc/bird-cascader.md)
@@ -106,9 +105,7 @@ npm run start
 登录密码：admin
 
 ## 效果图
-![dashboard.png-89.2kB][3]
+![image.png-136.6kB][2]
 
-
-  [1]: http://static.zybuluo.com/liuxx-/ooto8w6enlesmmn1hnyo0g4y/table.png
-  [2]: http://static.zybuluo.com/liuxx-/fuo5qdc7qo3nrzi4nr9l5m9x/edit.png
-  [3]: http://static.zybuluo.com/liuxx-/6b95gug7z6q7v8eqrkgkgkof/dashboard.png
+  [1]: http://static.zybuluo.com/liuxx-/879odqyw73b49qbzu7fbftvq/image.png
+  [2]: http://static.zybuluo.com/liuxx-/1swa515q64e3vytg1rhfhebu/image.png

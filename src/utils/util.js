@@ -1,34 +1,35 @@
 import store from 'store';
 
 const tokenKey = "sso.token";
+const userKey = 'bird.curUser';
 
 let util = {
   object: {
     deepClone: function (p, c) {
-      var c = c ? c : p.constructor === Array ? [] : {};
+      var nc = c ? c : p.constructor === Array ? [] : {};
       for (var i in p) {
         if (typeof p[i] === 'object') {
           if (p[i] == null) {
-            c[i] = null;
+            nc[i] = null;
             continue;
           }
-          c[i] = (p[i].constructor === Array) ? [] : {};
-          util.object.deepClone(p[i], c[i]);
+          nc[i] = (p[i].constructor === Array) ? [] : {};
+          util.object.deepClone(p[i], nc[i]);
         } else {
-          c[i] = p[i];
+          nc[i] = p[i];
         }
       }
-      return c;
+      return nc;
     },
     equal: function (a, b) {
-      return JSON.stringify(a) == JSON.stringify(b);
+      return JSON.stringify(a) === JSON.stringify(b);
     }
   },
   number: {
     getDiscount: function (price, originPrice) {
       if (price <= 0 || originPrice <= 0 || price >= originPrice) return "";
       var d = (price / originPrice * 10).toFixed(2);
-      while (d[d.length - 1] === "0" || d[d.length - 1] == ".") {
+      while (d[d.length - 1] === "0" || d[d.length - 1] === ".") {
         d = d.substring(0, d.length - 1);
       }
       return d;
@@ -110,7 +111,7 @@ let util = {
     },
     isEmpty: function (str) {
       if (typeof (str) === "undefined") return true;
-      return (str.replace(/(^\s*)|(\s*$)/g, "").length === 0);
+      return ((str + '').replace(/(^\s*)|(\s*$)/g, "").length === 0);
     },
     generateRandom(len) {
       len = len || 32;
@@ -136,7 +137,7 @@ let util = {
         'm+': date.getMinutes(),
         's+': date.getSeconds(),
         'q+': Math.floor((date.getMonth() + 3) / 3),
-        S: date.getMilliseconds(),
+        S: date.getMilliseconds()
       }
       if (/(y+)/.test(format)) {
         format = format.replace(RegExp.$1, `${date.getFullYear()}`.substr(4 - RegExp.$1.length))
@@ -172,10 +173,10 @@ let util = {
       return null;
     },
     set: function (key, value, span) {
-      var span = span || 120;//默认缓存两小时
+      var sp = span || 120;//默认缓存两小时
 
       var now = new Date();
-      var expire = new Date((now / 1000 + span * 60) * 1000);
+      var expire = new Date((now / 1000 + sp * 60) * 1000);
       var cacheObj = {
         expire: expire,
         value: value
@@ -198,7 +199,14 @@ let util = {
     },
     removeToken: function () {
       util.store.remove(tokenKey);
-    }
+      util.store.remove(userKey);
+    },
+    getUser: function () {
+      return util.store.get(userKey);
+    },
+    setUser: function (user) {
+      util.store.set(userKey, user);
+    },
   }
 }
 

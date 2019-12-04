@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Editor from 'braft-editor'
 import 'braft-editor/dist/braft.css'
-import { config,util } from 'utils';
+import { config, util } from 'utils';
 
 // 不允许上传超过50M的文件
 const validateFn = (file) => {
@@ -12,13 +12,13 @@ const validateFn = (file) => {
 
 const uploadFn = (param) => {
   const serverURL = config.api.upload;
-  const xhr = new XMLHttpRequest;
+  const xhr = new XMLHttpRequest();
   const fd = new FormData();
 
   // libraryId可用于通过mediaLibrary示例来操作对应的媒体内容
   console.log(param.libraryId)
 
-  const successFn = (response) => {
+  const successFn = () => {
     let resp = xhr.response;
     if (typeof (resp) === 'string') {
       resp = JSON.parse(resp);
@@ -35,7 +35,7 @@ const uploadFn = (param) => {
     param.progress(event.loaded / event.total * 100)
   }
 
-  const errorFn = (response) => {
+  const errorFn = () => {
     // 上传发生错误时调用param.error
     param.error({
       msg: 'unable to upload.'
@@ -57,7 +57,7 @@ class BraftEditor extends React.Component {
     super(props);
 
     this.state = {
-      contentId:util.string.generateRandom(6)
+      contentId: util.string.generateRandom(6)
     }
   }
 
@@ -65,18 +65,19 @@ class BraftEditor extends React.Component {
     this.props.onChange && this.props.onChange(html);
   }
 
-  componentWillReceiveProps(nextProps) {
-    if(nextProps.initValue!==this.props.initValue){
-      this.setState({contentId:nextProps.contentId})
+  UNSAFE_componentWillReceiveProps(nextProps) {
+    if (nextProps.initValue !== this.props.initValue) {
+      this.setState({ contentId: nextProps.contentId })
     }
   }
 
   render() {
+    let innerProps = this.props.innerProps || {};
     const editorProps = {
-      height: 300,
+      height: this.props.height,
       contentFormat: 'html',
       initialContent: this.props.initValue,
-      contentId:this.state.contentId,
+      contentId: this.state.contentId,
       // onChange: this.handleChange,
       onHTMLChange: html => this.onChange(html),
       media: {
@@ -85,7 +86,7 @@ class BraftEditor extends React.Component {
         video: true, // 开启视频插入功能
         audio: true, // 开启音频插入功能
         validateFn: validateFn,
-        uploadFn: uploadFn, // 指定上传函数
+        uploadFn: uploadFn // 指定上传函数
       },
       colors: [
         '#000000', '#333333', '#666666', '#999999', '#cccccc', '#ffffff',
@@ -95,14 +96,20 @@ class BraftEditor extends React.Component {
     }
 
     return <div style={{ border: "1px solid #bdc8d2", borderRadius: '3px' }}>
-      <Editor {...editorProps} />
+      <Editor {...{ ...editorProps, ...innerProps }} />
     </div>
   }
 }
 
+BraftEditor.defaultProps = {
+  height: 300
+}
+
 BraftEditor.propTypes = {
   initValue: PropTypes.string,
-  onChange: PropTypes.func
+  onChange: PropTypes.func,
+  height: PropTypes.number,
+  innerProps: PropTypes.object
 }
 
 export default BraftEditor
